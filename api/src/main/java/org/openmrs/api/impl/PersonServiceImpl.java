@@ -324,12 +324,12 @@ public class PersonServiceImpl extends BaseOpenmrsService implements PersonServi
 	private void setPreferredPersonName(Person person) {
 		PersonName preferredName = null;
 		PersonName possiblePreferredName = person.getPersonName();
-		if (possiblePreferredName != null && possiblePreferredName.getPreferred() && possiblePreferredName.getVoided() == false) {
+		if (possiblePreferredName != null && possiblePreferredName.getPreferred() && Boolean.FALSE.equals(possiblePreferredName.getVoided())) {
 			preferredName = possiblePreferredName;
 		}
 
 		for (PersonName name : person.getNames()) {
-			if (preferredName == null && name.getVoided() == false) {
+			if (preferredName == null && Boolean.FALSE.equals(name.getVoided())) {
 				name.setPreferred(true);
 				preferredName = name;
 				continue;
@@ -345,12 +345,12 @@ public class PersonServiceImpl extends BaseOpenmrsService implements PersonServi
 		PersonAddress preferredAddress = null;
 		PersonAddress possiblePreferredAddress = person.getPersonAddress();
 		if (possiblePreferredAddress != null && possiblePreferredAddress.getPreferred()
-				&& possiblePreferredAddress.getVoided() == false) {
+				&& Boolean.FALSE.equals(possiblePreferredAddress.getVoided())) {
 			preferredAddress = possiblePreferredAddress;
 		}
 
 		for (PersonAddress address : person.getAddresses()) {
-			if (preferredAddress == null && address.getVoided() == false) {
+			if (preferredAddress == null && Boolean.FALSE.equals(address.getVoided())) {
 				address.setPreferred(true);
 				preferredAddress = address;
 				continue;
