@@ -1,7 +1,4 @@
-# standard build with Maven and push coverage data
-name: Build with Maven
-
-# trigger build on branches that *should* support both Java 8 and Java 11
+name: Build with Maven and SonarQube Analysis
 on:
   push:
     branches:
@@ -9,12 +6,14 @@ on:
       - 2.4.x
       - 2.5.x
       - 2.6.x
+      - main
   pull_request:
     branches:
       - master
       - 2.4.x
       - 2.5.x
       - 2.6.x
+      - main
   workflow_dispatch:
 
 permissions: read-all
@@ -32,17 +31,24 @@ jobs:
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java-version }}
           cache: 'maven'
+      - name: Cache SonarQube packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
       - name: Install dependencies
         run: mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true --batch-mode --show-version --file pom.xml
       - name: Build with Maven
         run: mvn clean install --batch-mode && mvn test -Pskip-default-test -Pintegration-test --batch-mode --file pom.xml
-      # this is necessary to populate the environment variables for Coveralls properly
       - name: Set branch name and PR number
         id: refs
         if: ${{ matrix.java-version == '8' }}
@@ -53,7 +59,6 @@ jobs:
           echo "::set-output name=branch_name::${BRANCH_NAME_OR_REF#refs/heads/}"
           echo "::set-output name=pr_number::$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")"
       - name: Update coverage data
-        # only send coverage data for Java 8
         if: ${{ matrix.java-version == '8' && steps.refs.outcome == 'success' }}
         continue-on-error: true
         env:
@@ -63,3 +68,8 @@ jobs:
           CI_BRANCH: ${{ steps.refs.outputs.branch_name }}
           CI_PULL_REQUEST: ${{ steps.refs.outputs.pr_number }}
         run: mvn jacoco:report coveralls:report --batch-mode --file pom.xml --no-transfer-progress -DrepoToken=${{ secrets.COVERALLS_TOKEN }}
+      - name: SonarQube Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=log8371 -Dsonar.projectName='log8371'
