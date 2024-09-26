@@ -69,6 +69,7 @@ jobs:
           CI_PULL_REQUEST: ${{ steps.refs.outputs.pr_number }}
         run: mvn jacoco:report coveralls:report --batch-mode --file pom.xml --no-transfer-progress -DrepoToken=${{ secrets.COVERALLS_TOKEN }}
       - name: SonarQube Analysis
+        if: ${{ matrix.java-version == '17' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
