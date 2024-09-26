@@ -1101,13 +1101,6 @@
 				</dependency>
 			</dependencies>
 		</profile>
-		<profile>
-			<id>sonar-cloud</id>
-			<properties>
-				<sonar.organization>openmrs</sonar.organization>
-				<sonar.host.url>https://sonarcloud.io</sonar.host.url>
-			</properties>
-		</profile>
 		
 		<!-- When using mockito-core:3.12.4 with Java 17, we get the following error.
 		 java.lang.NullPointerException: Cannot read the array length because "this.buf" is null
