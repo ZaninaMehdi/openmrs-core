@@ -170,7 +170,7 @@ public class PersonServiceImpl extends BaseOpenmrsService implements PersonServi
 	}
 
 	private boolean isExistingType(PersonAttributeType type) {
-	    return type.getId != null;
+	    return type.getId() != null;
 	}
 	
 	private void updateGlobalPropertiesIfNeeded(PersonAttributeType type) throws APIException {
