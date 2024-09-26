@@ -72,5 +72,8 @@ jobs:
         if: ${{ matrix.java-version == '17' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=log8371 -Dsonar.projectName='log8371'
+        run: |
+          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          -Dsonar.projectKey=log8371 \
+          -Dsonar.projectName='log8371' \
+          -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
