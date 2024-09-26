@@ -57,6 +57,7 @@ public class PersonServiceImpl extends BaseOpenmrsService implements PersonServi
 	
 	private static final Logger log = LoggerFactory.getLogger(PersonServiceImpl.class);
 	
+	@Autowired
 	private PersonDAO dao;
 	
 	/**
@@ -140,58 +141,71 @@ public class PersonServiceImpl extends BaseOpenmrsService implements PersonServi
 	 */
 	@Override
 	public PersonAttributeType savePersonAttributeType(PersonAttributeType type) throws APIException {
-		checkIfPersonAttributeTypesAreLocked();
-		
-		if (type.getSortWeight() == null) {
-			List<PersonAttributeType> allTypes = Context.getPersonService().getAllPersonAttributeTypes();
-			if (!allTypes.isEmpty()) {
-				type.setSortWeight(allTypes.get(allTypes.size() - 1).getSortWeight() + 1);
-			} else {
-				type.setSortWeight(1.0);
-			}
-		}
-		
-		boolean updateExisting = false;
-		
-		if (type.getId() != null) {
-			updateExisting = true;
-			
-			String oldTypeName = dao.getSavedPersonAttributeTypeName(type);
-			String newTypeName = type.getName();
-			
-			if (!oldTypeName.equals(newTypeName)) {
-				List<GlobalProperty> props = new ArrayList<>();
-				
-				AdministrationService as = Context.getAdministrationService();
-				
-				for (String propName : OpenmrsConstants.GLOBAL_PROPERTIES_OF_PERSON_ATTRIBUTES) {
-					props.add(as.getGlobalPropertyObject(propName));
-				}
-				
-				for (GlobalProperty prop : props) {
-					if (prop != null) {
-						String propVal = prop.getPropertyValue();
-						if (propVal != null && propVal.contains(oldTypeName)) {
-							prop.setPropertyValue(propVal.replaceFirst(oldTypeName, newTypeName));
-							as.saveGlobalProperty(prop);
-						}
-					}
-				}
-			}
-		}
-		
-		PersonAttributeType attributeType = dao.savePersonAttributeType(type);
-		
-		if (updateExisting ) {
-			Boolean oldSearchable = dao.getSavedPersonAttributeTypeSearchable(type);
-			if (oldSearchable == null || !oldSearchable.equals(type.getSearchable())) {
-				//we need to update index searchable property has changed
-				Context.updateSearchIndexForType(PersonAttribute.class);
-			}
-		}
-		
-		return attributeType;
+    checkIfPersonAttributeTypesAreLocked();
+    
+    assignSortWeightIfNeeded(type);
+    
+    boolean updateExisting = isExistingType(type);
+    
+    if (updateExisting) {
+        updateGlobalPropertiesIfNeeded(type);
+    }
+    
+    PersonAttributeType attributeType = dao.savePersonAttributeType(type);
+    
+    if (updateExisting) {
+        updateSearchIndexIfNeeded(type);
+    }
+    
+    return attributeType;
 	}
+
+	private void assignSortWeightIfNeeded(PersonAttributeType type) {
+	    if (type.getSortWeight() == null) {
+	        List<PersonAttributeType> allTypes = Context.getPersonService().getAllPersonAttributeTypes();
+	        double sortWeight = allTypes.isEmpty() ? 1.0 : allTypes.get(allTypes.size() - 1).getSortWeight() + 1;
+	        type.setSortWeight(sortWeight);
+	    }
+	}
+
+	private boolean isExistingType(PersonAttributeType type) {
+	    return type.getId != null;
+	}
+	
+	private void updateGlobalPropertiesIfNeeded(PersonAttributeType type) throws APIException {
+	    String oldTypeName = dao.getSavedPersonAttributeTypeName(type);
+	    String newTypeName = type.getName();
+	    
+	    if (!oldTypeName.equals(newTypeName)) {
+	        List<GlobalProperty> propertiesToUpdate = getGlobalPropertiesToUpdate(oldTypeName, newTypeName);
+	        for (GlobalProperty property : propertiesToUpdate) {
+	            Context.getAdministrationService().saveGlobalProperty(property);
+	        }
+	    }
+	}
+	
+	private List<GlobalProperty> getGlobalPropertiesToUpdate(String oldTypeName, String newTypeName) {
+	    List<GlobalProperty> updatedProperties = new ArrayList<>();
+	    AdministrationService adminService = Context.getAdministrationService();
+	    
+	    for (String propertyName : OpenmrsConstants.GLOBAL_PROPERTIES_OF_PERSON_ATTRIBUTES) {
+	        GlobalProperty property = adminService.getGlobalPropertyObject(propertyName);
+	        if (property != null && property.getPropertyValue() != null && property.getPropertyValue().contains(oldTypeName)) {
+	            property.setPropertyValue(property.getPropertyValue().replaceFirst(oldTypeName, newTypeName));
+	            updatedProperties.add(property);
+	        }
+	    }
+	    
+	    return updatedProperties;
+	}
+	
+	private void updateSearchIndexIfNeeded(PersonAttributeType type) {
+	    Boolean oldSearchable = dao.getSavedPersonAttributeTypeSearchable(type);
+	    if (oldSearchable == null || !oldSearchable.equals(type.getSearchable())) {
+	        Context.updateSearchIndexForType(PersonAttribute.class);
+	    }
+	}
+
 	
 	/**
 	 * @see org.openmrs.api.PersonService#retirePersonAttributeType(PersonAttributeType, String)
