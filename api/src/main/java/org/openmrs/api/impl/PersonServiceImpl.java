@@ -59,7 +59,7 @@ public class PersonServiceImpl extends BaseOpenmrsService implements PersonServi
 	private static final Logger log = LoggerFactory.getLogger(PersonServiceImpl.class);
 	
 	
-	private final PersonDAO dao;
+	private PersonDAO dao;
 
 	public PersonServiceImpl(PersonDAO dao) {
         this.dao = dao;
