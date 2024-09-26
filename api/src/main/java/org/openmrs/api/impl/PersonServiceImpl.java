@@ -324,12 +324,12 @@ public class PersonServiceImpl extends BaseOpenmrsService implements PersonServi
 	private void setPreferredPersonName(Person person) {
 		PersonName preferredName = null;
 		PersonName possiblePreferredName = person.getPersonName();
-		if (possiblePreferredName != null && possiblePreferredName.getPreferred() && !possiblePreferredName.getVoided()) {
+		if (possiblePreferredName != null && possiblePreferredName.getPreferred() && possiblePreferredName.getVoided() == false) {
 			preferredName = possiblePreferredName;
 		}
 
 		for (PersonName name : person.getNames()) {
-			if (preferredName == null && !name.getVoided()) {
+			if (preferredName == null && name.getVoided() == false) {
 				name.setPreferred(true);
 				preferredName = name;
 				continue;
@@ -345,12 +345,12 @@ public class PersonServiceImpl extends BaseOpenmrsService implements PersonServi
 		PersonAddress preferredAddress = null;
 		PersonAddress possiblePreferredAddress = person.getPersonAddress();
 		if (possiblePreferredAddress != null && possiblePreferredAddress.getPreferred()
-				&& !possiblePreferredAddress.getVoided()) {
+				&& possiblePreferredAddress.getVoided() == false) {
 			preferredAddress = possiblePreferredAddress;
 		}
 
 		for (PersonAddress address : person.getAddresses()) {
-			if (preferredAddress == null && !address.getVoided()) {
+			if (preferredAddress == null && address.getVoided() == false) {
 				address.setPreferred(true);
 				preferredAddress = address;
 				continue;
@@ -765,14 +765,7 @@ public class PersonServiceImpl extends BaseOpenmrsService implements PersonServi
 				Person from = rel.getPersonA();
 				Person to = rel.getPersonB();
 				
-				List<Person> relList = ret.get(from);
-				if (relList == null) {
-					relList = new ArrayList<>();
-				}
-				relList.add(to);
-				
-				ret.put(from, relList);
-			}
+				ret.computeIfAbsent(from, key -> new ArrayList<>()).add(to);
 		}
 		
 		return ret;
@@ -835,8 +828,8 @@ public class PersonServiceImpl extends BaseOpenmrsService implements PersonServi
 		if (Context.getSerializationService().getDefaultSerializer() == null) {
 			throw new APIException("serializer.default.not.found", (Object[]) null);
 		}
-		log.debug("Auditing merging of non-preferred person " + personMergeLog.getLoser().getUuid()
-		        + " with preferred person " + personMergeLog.getWinner().getId());
+		log.debug("Auditing merging of non-preferred person {} with preferred person {}", 
+          personMergeLog.getLoser().getUuid(), personMergeLog.getWinner().getId());
 		//populate the mergedData XML from the PersonMergeLogData object
 		String serialized = Context.getSerializationService().getDefaultSerializer()
 		        .serialize(personMergeLog.getPersonMergeLogData());
