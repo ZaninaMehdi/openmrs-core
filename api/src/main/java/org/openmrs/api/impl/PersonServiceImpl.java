@@ -60,6 +60,8 @@ public class PersonServiceImpl extends BaseOpenmrsService implements PersonServi
 	
 	private PersonDAO dao;
 
+	private PersonService personService;
+
 	public PersonServiceImpl(PersonDAO dao) {
         this.dao = dao;
     }
@@ -594,9 +596,9 @@ public class PersonServiceImpl extends BaseOpenmrsService implements PersonServi
 		List<PersonAttributeType> result = new ArrayList<>();
 		for (String nameOrId : attrNames) {
 			if (nameOrId.matches("\\d")) {
-				result.add(getPersonAttributeType(Integer.valueOf(nameOrId)));
+				result.add(dao.getPersonAttributeType(Integer.valueOf(nameOrId)));
 			} else {
-				result.add(getPersonAttributeTypeByName(nameOrId));
+				result.add(personService.getPersonAttributeTypeByName(nameOrId));
 			}
 		}
 		return result;
