@@ -766,6 +766,7 @@ public class PersonServiceImpl extends BaseOpenmrsService implements PersonServi
 				Person to = rel.getPersonB();
 				
 				ret.computeIfAbsent(from, key -> new ArrayList<>()).add(to);
+			}
 		}
 		
 		return ret;
