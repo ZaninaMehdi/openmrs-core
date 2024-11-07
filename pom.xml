@@ -1099,15 +1099,14 @@
 					<artifactId>sonar-jacoco-listeners</artifactId>
 					<scope>test</scope>
 				</dependency>
+				<dependency>
+   					<groupId>org.sonarsource.scanner.maven</groupId>
+   					<artifactId>sonar-maven-plugin</artifactId>
+   					<version>4.0.0.4121</version>
+				</dependency>
 			</dependencies>
 		</profile>
-		<profile>
-			<id>sonar-cloud</id>
-			<properties>
-				<sonar.organization>openmrs</sonar.organization>
-				<sonar.host.url>https://sonarcloud.io</sonar.host.url>
-			</properties>
-		</profile>
+
 		
 		<!-- When using mockito-core:3.12.4 with Java 17, we get the following error.
 		 java.lang.NullPointerException: Cannot read the array length because "this.buf" is null
@@ -1226,12 +1225,6 @@
 		<owaspCsrfGuardVersion>4.2.1</owaspCsrfGuardVersion>
 
 		<customArgLineForTesting />
-
-		<sonar.host.url>https://sonar.openmrs.org</sonar.host.url>		
-		<sonar.issuesReport.html.enable>true</sonar.issuesReport.html.enable>
-		<sonar.issuesReport.lightModeOnly>true</sonar.issuesReport.lightModeOnly>
-		<sonar.issuesReport.console.enable>true</sonar.issuesReport.console.enable>
-		<sonar.analysis.mode>publish</sonar.analysis.mode>
 
 		<argLine>-Duser.language=en -Duser.region=US -Xmx1g ${customArgLineForTesting} -Djava.locale.providers=COMPAT</argLine>
 	</properties>
